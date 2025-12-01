@@ -20,7 +20,6 @@ document.getElementById("calculate-btn").onclick = () => {
                 oreTypesUsed++;
             }
 
-            // Cap each ore amount to 4 for multiplier calculation
             let cappedAmount = Math.min(amount, 4);
             let oreData = window.oreData.find(o => o.name === oreName);
             let multiplier = oreData ? oreData.multiplier : 0;
@@ -36,41 +35,24 @@ document.getElementById("calculate-btn").onclick = () => {
         }
     }
 
-    // Calculate suggested extras to roughly balance percentages (~30%)
-    let balancedExtras = {};
-    let newTotal = totalAmount;
-
-    for (let ore in ores) {
-        let currentPct = ores[ore].amount / newTotal;
-        let suggestedExtra = 0;
-        const targetPct = 0.3;
-
-        if (currentPct < targetPct) {
-            suggestedExtra = Math.ceil((targetPct * newTotal - ores[ore].amount));
-            if (suggestedExtra < 0) suggestedExtra = 0;
-        }
-
-        balancedExtras[ore] = suggestedExtra;
-        newTotal += suggestedExtra;
-    }
-
-    // Display results
+    // Calculate % needed to max traits (~30%)
     let resultBox = document.getElementById("results");
     resultBox.innerHTML = "";
 
     for (let ore in ores) {
-        let newAmount = ores[ore].amount + (balancedExtras[ore] || 0);
-        let pct = (newAmount / newTotal) * 100;
+        let currentPct = (ores[ore].amount / totalAmount) * 100;
+        let neededPct = Math.max(0, 30 - currentPct);
 
         let status = "";
-        if (pct > 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>`;
-        else if (pct > 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}% Traits available)</span>`;
-        else status = `${pct.toFixed(1)}%`;
+        if (currentPct >= 30) {
+            status = `<span class='maxed'>MAXED (${currentPct.toFixed(1)}% Traits Maxed)</span>`;
+        } else {
+            status = `<span class='check-good'>${currentPct.toFixed(1)}% Traits available - Need ${neededPct.toFixed(1)}% more to max</span>`;
+        }
 
         resultBox.innerHTML += `
             <p>
                 <b>${ore}</b>: ${status}<br>
-                Current: ${ores[ore].amount} + Suggested Extra: ${balancedExtras[ore] || 0}<br>
                 Multiplier: ${ores[ore].multiplier}x
                 ${ores[ore].trait !== "None" ? `<br>Trait: ${ores[ore].trait}` : ""}
             </p>
