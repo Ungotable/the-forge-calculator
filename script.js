@@ -167,9 +167,15 @@ document.getElementById("calculate-btn").onclick = () => {
 
     // Display Ore Breakdown on its own section (right side)
     const resultBox = document.getElementById("results");
+    resultBox.innerHTML = "<h3>Ore Breakdown</h3>";
+
+    let originalTotal = totalAmount; // ORIGINAL total before suggestions
+
     for (let ore in ores) {
-        let newAmount = ores[ore].amount + (balancedExtras[ore] || 0);
-        let pct = (newAmount / newTotal) * 100;
+        let originalAmount = ores[ore].amount; // NO suggested extras
+        let suggested = balancedExtras[ore] || 0;
+
+        let pct = (originalAmount / originalTotal) * 100; // percentage BEFORE suggestions
 
         let status = "";
         if (pct >= 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>`;
@@ -179,12 +185,13 @@ document.getElementById("calculate-btn").onclick = () => {
         resultBox.innerHTML += `
             <p>
                 <b>${ore}</b>: ${status}<br>
-                Current: ${ores[ore].amount} + Suggested Extra: ${balancedExtras[ore] || 0}<br>
+                Current: ${originalAmount} + Suggested Extra: ${suggested}<br>
                 Multiplier: ${ores[ore].multiplier}x
                 ${ores[ore].trait !== "None" ? `<br>Trait: ${ores[ore].trait}` : ""}
             </p>
         `;
     }
+
 
     // Overall multiplier & traits
     let overallMultiplier = oreTypesUsed ? (totalMultiplier / oreTypesUsed) : 0;
