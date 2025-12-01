@@ -125,15 +125,12 @@ document.getElementById("calculate-btn").onclick = () => {
     while (changed) {
         changed = false;
 
-        // Calculate total including extras
         let tempTotal = 0;
         for (let ore in ores) tempTotal += ores[ore].amount + balancedExtras[ore];
 
-        // Calculate current percentages
         let percentages = {};
         for (let ore in ores) percentages[ore] = (ores[ore].amount + balancedExtras[ore]) / tempTotal;
 
-        // Shift 1 unit from over-30% ores to under-30% ores
         for (let donor in ores) {
             if (percentages[donor] > 0.3) {
                 let under30 = Object.keys(ores).filter(o => percentages[o] < 0.3);
