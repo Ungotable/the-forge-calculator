@@ -1,30 +1,29 @@
 let oreData = [];
-let armorsData = {};
-let weaponsData = {};
+let armortype = {};
+let weapontype = {};
 
 // Fetch ores.json
 fetch('./ores.json')
     .then(res => res.json())
     .then(data => {
         oreData = data.ores;
-        window.oreData = oreData;
         populateSelects(oreData);
     })
     .catch(err => console.error("Failed to load ores.json:", err));
 
-// Fetch armors.json
-fetch('./armors.json')
+// Fetch armortype.json
+fetch('./armortype.json')
     .then(res => res.json())
-    .then(data => armorsData = data.crafting_armor_by_ore)
-    .catch(err => console.error("Failed to load armors.json:", err));
+    .then(data => armortype = data)
+    .catch(err => console.error("Failed to load armortype.json:", err));
 
-// Fetch weapons.json
-fetch('./weapons.json')
+// Fetch weapontype.json
+fetch('./weapontype.json')
     .then(res => res.json())
-    .then(data => weaponsData = data.crafting_weapon_by_ore)
-    .catch(err => console.error("Failed to load weapons.json:", err));
+    .then(data => weapontype = data)
+    .catch(err => console.error("Failed to load weapontype.json:", err));
 
-// Populate all ore <select> dropdowns
+// Populate ore dropdowns
 function populateSelects(ores) {
     const selects = document.querySelectorAll(".ore-select");
     selects.forEach(select => {
@@ -38,73 +37,121 @@ function populateSelects(ores) {
     });
 }
 
-// Calculate button logic
+// Calculate button
 document.getElementById("calculate-btn").onclick = () => {
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
 
-    let totalOre = 0;
     let ores = {};
+    let totalAmount = 0;
+    let totalMultiplier = 0;
+    let oreTypesUsed = 0;
+    let overallTraits = [];
 
     // Collect ore data
     for (let i = 0; i < oreSelects.length; i++) {
         let oreName = oreSelects[i].value;
         let amount = parseFloat(oreAmounts[i].value) || 0;
 
-        if (oreName !== "" && amount > 0) {
-            totalOre += amount;
+        if (oreName && amount > 0) {
+            totalAmount += amount;
+            if (!ores[oreName]) {
+                ores[oreName] = { amount: 0, multiplier: 0, trait: "" };
+                oreTypesUsed++;
+            }
 
-            if (!ores[oreName]) ores[oreName] = { amount: 0 };
+            let cappedAmount = Math.min(amount, 4);
+            let oreDataItem = oreData.find(o => o.name === oreName);
+            let multiplier = oreDataItem ? oreDataItem.multiplier : 0;
+            let trait = oreDataItem ? oreDataItem.trait : "None";
+
             ores[oreName].amount += amount;
+            ores[oreName].multiplier = multiplier;
+            ores[oreName].trait = trait;
+
+            totalMultiplier += cappedAmount * multiplier;
+
+            if (trait !== "None") overallTraits.push(`${oreName}: ${trait}`);
         }
     }
 
-    // Determine Armor Type
-    let armorKeys = Object.keys(armorsData).map(k => parseInt(k)).filter(k => k <= totalOre);
-    let armor = armorKeys.length ? armorsData[Math.max(...armorKeys)] : { item: "None", chance: 0, health: 0 };
+    // Determine craftable weapon/armor type
+    let weaponType = "None";
+    if (totalAmount >= 15) weaponType = "Colossal Swords";
+    else if (totalAmount >= 10) weaponType = "Great Swords";
+    else if (totalAmount >= 5) weaponType = "Straight Swords";
+    else if (totalAmount >= 1) weaponType = "Daggers";
 
-    // Determine Weapon Type
-    let weaponKeys = Object.keys(weaponsData).map(k => parseInt(k)).filter(k => k <= totalOre);
-    let weapon = weaponKeys.length ? weaponsData[Math.max(...weaponKeys)] : { item: "None", chance: 0, damage: 0, speed: 0 };
+    let armorTypeName = "None";
+    if (totalAmount >= 10) armorTypeName = "Heavy Armor";
+    else if (totalAmount >= 6) armorTypeName = "Medium Armor";
+    else if (totalAmount >= 3) armorTypeName = "Light Armor";
 
-    // Update left side
-    document.getElementById("weapon-result").textContent = `${weapon.item} ${weapon.chance}%`;
-    document.getElementById("armor-result").textContent = `${armor.item} ${armor.chance}%`;
+    // Display Weapon variants
+    const weaponBox = document.getElementById("weapon-stats");
+    weaponBox.innerHTML = weaponType !== "None" && weapontype[weaponType]
+        ? `<h4>${weaponType} Variants:</h4>` + weapontype[weaponType].map(w => `
+            <p>
+                <b>${w.name}</b> (Chance: ${w.chance})<br>
+                Damage: ${w.damage}<br>
+                Speed: ${w.speed}s<br>
+                Range: ${w.range}<br>
+                Price: ${w.price}g
+            </p>
+        `).join('')
+        : "<p>None</p>";
 
-    // Display stats on the right
-    const statsResult = document.getElementById("stats-result");
-    let statsHtml = "";
+    // Display Armor variants
+    const armorBox = document.getElementById("armor-stats");
+    armorBox.innerHTML = armorTypeName !== "None" && armortype[armorTypeName]
+        ? `<h4>${armorTypeName} Variants:</h4>` + armortype[armorTypeName].map(a => `
+            <p>
+                <b>${a.name}</b> (Chance: ${a.chance})<br>
+                Health: +${a.health}%<br>
+                Price: ${a.price}$
+            </p>
+        `).join('')
+        : "<p>None</p>";
 
-    if (weapon.item !== "None") {
-        statsHtml += `<p><b>Weapon Stats:</b></p>`;
-        statsHtml += `<p>Damage: ${weapon.damage}</p>`;
-        statsHtml += `<p>Speed: ${weapon.speed}</p>`;
-        statsHtml += `<p>Chance: ${weapon.chance}/?</p>`;
-    }
-
-    if (armor.item !== "None") {
-        statsHtml += `<p><b>Armor Stats:</b></p>`;
-        statsHtml += `<p>Health: ${armor.health}</p>`;
-        statsHtml += `<p>Chance: ${armor.chance}/?</p>`;
-    }
-
-    statsResult.innerHTML = statsHtml;
-
-    // Continue displaying ore breakdown (optional)
-    const resultBox = document.getElementById("results");
-    resultBox.innerHTML = "";
+    // Suggested extras (~balance 30%)
+    let balancedExtras = {};
+    let newTotal = totalAmount;
     for (let ore in ores) {
-        let currentPct = totalOre > 0 ? (ores[ore].amount / totalOre) * 100 : 0;
-        let neededPct = Math.max(0, 30 - currentPct);
+        let currentPct = ores[ore].amount / newTotal;
+        let suggestedExtra = 0;
+        const targetPct = 0.3;
+        if (currentPct < targetPct) {
+            suggestedExtra = Math.ceil((targetPct * newTotal - ores[ore].amount));
+            suggestedExtra = Math.max(suggestedExtra, 0);
+        }
+        balancedExtras[ore] = suggestedExtra;
+        newTotal += suggestedExtra;
+    }
 
-        let status = currentPct >= 30
-            ? `<span class='maxed'>MAXED (${currentPct.toFixed(1)}% Traits Maxed)</span>`
-            : `<span class='check-good'>${currentPct.toFixed(1)}% Traits available - Need ${neededPct.toFixed(1)}% more to max</span>`;
+    // Display Ore Breakdown
+    const resultBox = document.getElementById("results");
+    resultBox.innerHTML = "<h3>Ore Breakdown</h3>";
+    for (let ore in ores) {
+        let newAmount = ores[ore].amount + (balancedExtras[ore] || 0);
+        let pct = (newAmount / newTotal) * 100;
+
+        let status = "";
+        if (pct >= 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>`;
+        else if (pct >= 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}% Traits available)</span>`;
+        else status = `${pct.toFixed(1)}%`;
 
         resultBox.innerHTML += `
             <p>
-                <b>${ore}</b>: ${status}
+                <b>${ore}</b>: ${status}<br>
+                Current: ${ores[ore].amount} + Suggested Extra: ${balancedExtras[ore] || 0}<br>
+                Multiplier: ${ores[ore].multiplier}x
+                ${ores[ore].trait !== "None" ? `<br>Trait: ${ores[ore].trait}` : ""}
             </p>
         `;
     }
+
+    // Overall multiplier & traits
+    let overallMultiplier = oreTypesUsed ? (totalMultiplier / oreTypesUsed) : 0;
+    resultBox.innerHTML += `<p><b>Overall Multiplier:</b> ${overallMultiplier.toFixed(2)}x</p>`;
+    resultBox.innerHTML += `<p><b>Overall Traits:</b><br>${overallTraits.length ? overallTraits.map(t => "- " + t).join("<br>") : "-"}</p>`;
 };
