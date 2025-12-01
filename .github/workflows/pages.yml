@@ -14,16 +14,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout the repository
+      # Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Upload artifact for GitHub Pages
+      # Upload Pages artifact (use the latest Pages-specific action)
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v2
         with:
-          path: ./   # deploy the root folder, change if your site is in a subfolder
+          path: ./   # adjust if your site is in a subfolder like ./dist
 
-      # 3. Deploy to GitHub Pages
+      # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
