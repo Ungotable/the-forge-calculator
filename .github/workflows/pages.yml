@@ -20,7 +20,7 @@ jobs:
 
       # 2. Upload artifact for GitHub Pages
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./   # deploy the root folder, change if your site is in a subfolder
 
