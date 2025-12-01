@@ -1,7 +1,7 @@
 body {
     background: #1e1e1e;
     color: white;
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     padding: 20px;
 }
 
@@ -19,9 +19,15 @@ select, input {
     padding: 8px;
     border-radius: 5px;
     border: none;
+    background: #2a2a2a;
+    color: white;
 }
 
-.weapon-box {
+select:focus, input:focus {
+    outline: 2px solid #0a84ff;
+}
+
+.weapon-box, .armor-box {
     background: #333;
     padding: 10px;
     width: 300px;
@@ -36,6 +42,11 @@ select, input {
     color: white;
     border-radius: 8px;
     cursor: pointer;
+    transition: background 0.3s;
+}
+
+#calculate-btn:hover {
+    background: #006fe0;
 }
 
 #results {
@@ -49,4 +60,38 @@ select, input {
 .maxed {
     color: #ffcc00;
     font-weight: bold;
+}
+
+.result-item {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.result-item b {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.stats-box {
+    background: #222;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.stats-box p {
+    margin: 3px 0;
+}
+
+.weapon-stats, .armor-stats {
+    margin-top: 10px;
+}
+
+.weapon-stats b, .armor-stats b {
+    display: block;
+    margin-bottom: 3px;
 }
