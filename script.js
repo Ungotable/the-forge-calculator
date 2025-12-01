@@ -150,7 +150,7 @@ document.getElementById("calculate-btn").onclick = () => {
 
                     if ((donorAmount - 1) / tempTotal >= 0.30) {
 
-                        balancedExtras[donor] -= 1;   
+                        balancedExtras[donor] -= 1;
                         balancedExtras[receiver] += 1;
 
                         changed = true;
@@ -160,9 +160,10 @@ document.getElementById("calculate-btn").onclick = () => {
             }
         }
     }
-
     let newTotal = 0;
-    for (let ore in ores) newTotal += ores[ore].amount + balancedExtras[ore];
+    for (let ore in ores) {
+        newTotal += ores[ore].amount + balancedExtras[ore];
+    }
 
     // Display Ore Breakdown on its own section (right side)
     const resultBox = document.getElementById("results");
