@@ -49,3 +49,29 @@ document.getElementById("calculate-btn").onclick = () => {
     else if (totalAmount === 6) weaponResult.innerText = "84% Straight Sword";
     else weaponResult.innerText = "Unknown";
 };
+
+async function loadOres() {
+    const response = await fetch("ores.json");
+    const data = await response.json();
+
+    const selects = document.querySelectorAll(".ore-select");
+
+    selects.forEach(select => {
+        // First option = "None"
+        let noneOption = document.createElement("option");
+        noneOption.value = "";
+        noneOption.textContent = "None";
+        select.appendChild(noneOption);
+
+        // Populate ore list
+        data.ores.forEach(ore => {
+            let option = document.createElement("option");
+            option.value = ore.name;
+            option.textContent = ore.name;
+            select.appendChild(option);
+        });
+    });
+}
+
+// load ore list on page start
+loadOres();
