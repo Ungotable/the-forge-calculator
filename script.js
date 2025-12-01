@@ -1,60 +1,99 @@
-document.getElementById("calculate-btn").onclick = async () => {
+document.getElementById("calculate-btn").onclick = () => {
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
 
-    // Load ore data
-    const response = await fetch("ores.json");
-    const data = await response.json();
-    const oreData = {};
-    data.ores.forEach(o => oreData[o.name] = o);
-
     let ores = {};
     let totalAmount = 0;
+    let totalMultiplier = 0;
+    let oreTypesUsed = 0;
 
-    // Collect ore amounts
+    // Collect ore data
     for (let i = 0; i < oreSelects.length; i++) {
-        const oreName = oreSelects[i].value;
+        let oreName = oreSelects[i].value;
         let amount = parseFloat(oreAmounts[i].value) || 0;
 
-        if (oreName && amount > 0) {
+        if (oreName !== "" && amount > 0) {
             totalAmount += amount;
-            ores[oreName] = (ores[oreName] || 0) + amount;
+            if (!ores[oreName]) {
+                ores[oreName] = { amount: 0, multiplier: 0 };
+                oreTypesUsed++;
+            }
+
+            // Cap each ore amount to 4 for multiplier calculation
+            let cappedAmount = Math.min(amount, 4);
+            let oreData = window.oreData.find(o => o.name === oreName);
+            let multiplier = oreData ? oreData.multiplier : 0;
+
+            ores[oreName].amount += amount;
+            ores[oreName].multiplier = multiplier;
+
+            totalMultiplier += cappedAmount * multiplier;
         }
     }
 
-    const resultBox = document.getElementById("results");
+    // Calculate percentages
+    let resultBox = document.getElementById("results");
     resultBox.innerHTML = "";
 
-    let overallMultiplier = 0;
+    for (let ore in ores) {
+        let pct = (ores[ore].amount / totalAmount) * 100;
 
-    for (let oreName in ores) {
-        const ore = oreData[oreName];
-        const amount = Math.min(ores[oreName], 4); // cap at 4
-        const pct = (ores[oreName] / totalAmount) * 100;
-
-        // Determine status
         let status = "";
-        if (pct > 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxxed)</span>`;
-        else if (pct > 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}% Traits available)</span>`;
+        if (pct > 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}%)</span>`;
+        else if (pct > 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}%)</span>`;
         else status = `${pct.toFixed(1)}%`;
 
-        // Optimal extra to reach 33%
-        let optimal = Math.ceil((totalAmount * 0.33) - ores[oreName]);
+        // optimal for 30–33.3%
+        let optimal = Math.ceil((totalAmount * 0.33) - ores[ore].amount);
         if (optimal < 0) optimal = 0;
-
-        // Multiplier calculation
-        const oreMultiplier = ore.multiplier * amount;
-        overallMultiplier += oreMultiplier;
 
         resultBox.innerHTML += `
             <p>
-                <b>${oreName}</b>: ${status}<br>
-                Optimal extra needed: ${optimal}<br>
-                ${pct > 30 && ore.trait ? `Trait: ${ore.trait}<br>` : ""}
-                Multiplier: ${oreMultiplier.toFixed(2)}x
+                <b>${ore}</b>: ${status}  
+                <br>Optimal extra needed: ${optimal}
+                <br>Multiplier: ${ores[ore].multiplier}x
             </p>
         `;
     }
 
+    // Calculate overall multiplier
+    let overallMultiplier = oreTypesUsed ? (totalMultiplier / oreTypesUsed) : 0;
     resultBox.innerHTML += `<p><b>Overall Multiplier:</b> ${overallMultiplier.toFixed(2)}x</p>`;
+
+    // Weapon forging logic
+    let weaponResult = document.getElementById("weapon-result");
+
+    if (totalAmount <= 2) weaponResult.innerText = "Cannot Forge";
+    else if (totalAmount === 3) weaponResult.innerText = "100% Dagger";
+    else if (totalAmount === 4 || totalAmount === 5) weaponResult.innerText = "Straight Sword (chance)";
+    else if (totalAmount === 6) weaponResult.innerText = "84% Straight Sword";
+    else weaponResult.innerText = "Unknown";
 };
+
+// Load ore data
+async function loadOres() {
+    const response = await fetch("ores.json");
+    const data = await response.json();
+    window.oreData = data.ores; // make global for multiplier lookup
+
+    const selects = document.querySelectorAll(".ore-select");
+
+    selects.forEach(select => {
+        // First option = "None"
+        let noneOption = document.createElement("option");
+        noneOption.value = "";
+        noneOption.textContent = "None";
+        select.appendChild(noneOption);
+
+        // Populate ore list
+        data.ores.forEach(ore => {
+            let option = document.createElement("option");
+            option.value = ore.name;
+            option.textContent = ore.name;
+            select.appendChild(option);
+        });
+    });
+}
+
+// load ore list on page start
+loadOres();
