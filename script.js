@@ -60,7 +60,6 @@ document.getElementById("calculate-btn").onclick = () => {
                 oreTypesUsed++;
             }
 
-            let cappedAmount = Math.min(amount, 4);
             let oreDataItem = oreData.find(o => o.name === oreName);
             let multiplier = oreDataItem ? oreDataItem.multiplier : 0;
             let trait = oreDataItem ? oreDataItem.trait : "None";
@@ -69,7 +68,7 @@ document.getElementById("calculate-btn").onclick = () => {
             ores[oreName].multiplier = multiplier;
             ores[oreName].trait = trait;
 
-            totalMultiplier += cappedAmount * multiplier;
+            totalMultiplier += multiplier;
 
             if (trait !== "None") overallTraits.push(`${oreName}: ${trait}`);
         }
