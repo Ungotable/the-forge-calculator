@@ -2,8 +2,7 @@ name: Deploy Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -14,16 +13,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Upload Pages artifact (use the latest Pages-specific action)
+      # 2. Upload artifact for Pages
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./   # adjust if your site is in a subfolder like ./dist
+          path: ./   # deploy everything in the root
 
-      # Deploy to GitHub Pages
+      # 3. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
