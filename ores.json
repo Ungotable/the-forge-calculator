@@ -35,6 +35,6 @@
     { "id": "magmaite", "name": "Magmaite", "multiplier": 5.0 },
     { "id": "lightite", "name": "Lightite", "multiplier": 4.6 },
     { "id": "demonite", "name": "Demonite", "multiplier": 5.5 },
-    { "id": "darkryte", "name": "Darkryte", "multiplier": 0 } 
+    { "id": "darkryte", "name": "Darkryte", "multiplier": 6.3 } 
   ]
 }
