@@ -15,7 +15,7 @@ document.getElementById("calculate-btn").onclick = () => {
         if (oreName !== "" && amount > 0) {
             totalAmount += amount;
             if (!ores[oreName]) {
-                ores[oreName] = { amount: 0, multiplier: 0 };
+                ores[oreName] = { amount: 0, multiplier: 0, trait: "" };
                 oreTypesUsed++;
             }
 
@@ -23,15 +23,17 @@ document.getElementById("calculate-btn").onclick = () => {
             let cappedAmount = Math.min(amount, 4);
             let oreData = window.oreData.find(o => o.name === oreName);
             let multiplier = oreData ? oreData.multiplier : 0;
+            let trait = oreData ? oreData.trait : "None";
 
             ores[oreName].amount += amount;
             ores[oreName].multiplier = multiplier;
+            ores[oreName].trait = trait;
 
             totalMultiplier += cappedAmount * multiplier;
         }
     }
 
-    // Calculate percentages
+    // Display results
     let resultBox = document.getElementById("results");
     resultBox.innerHTML = "";
 
@@ -39,11 +41,11 @@ document.getElementById("calculate-btn").onclick = () => {
         let pct = (ores[ore].amount / totalAmount) * 100;
 
         let status = "";
-        if (pct > 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}%)</span>`;
-        else if (pct > 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}%)</span>`;
+        if (pct > 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>`;
+        else if (pct > 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}% Traits available)</span>`;
         else status = `${pct.toFixed(1)}%`;
 
-        // optimal for 30–33.3%
+        // Optimal extra needed to reach ~33%
         let optimal = Math.ceil((totalAmount * 0.33) - ores[ore].amount);
         if (optimal < 0) optimal = 0;
 
@@ -52,6 +54,7 @@ document.getElementById("calculate-btn").onclick = () => {
                 <b>${ore}</b>: ${status}  
                 <br>Optimal extra needed: ${optimal}
                 <br>Multiplier: ${ores[ore].multiplier}x
+                ${pct > 30 ? `<br>Trait: ${ores[ore].trait}` : ""}
             </p>
         `;
     }
@@ -62,7 +65,6 @@ document.getElementById("calculate-btn").onclick = () => {
 
     // Weapon forging logic
     let weaponResult = document.getElementById("weapon-result");
-
     if (totalAmount <= 2) weaponResult.innerText = "Cannot Forge";
     else if (totalAmount === 3) weaponResult.innerText = "100% Dagger";
     else if (totalAmount === 4 || totalAmount === 5) weaponResult.innerText = "Straight Sword (chance)";
