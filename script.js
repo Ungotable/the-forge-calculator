@@ -4,15 +4,30 @@ document.getElementById("calculate-btn").onclick = () => {
 
     let ores = {};
     let totalAmount = 0;
+    let totalMultiplier = 0;
+    let oreTypesUsed = 0;
 
     // Collect ore data
     for (let i = 0; i < oreSelects.length; i++) {
-        let ore = oreSelects[i].value;
+        let oreName = oreSelects[i].value;
         let amount = parseFloat(oreAmounts[i].value) || 0;
 
-        if (ore !== "" && amount > 0) {
+        if (oreName !== "" && amount > 0) {
             totalAmount += amount;
-            ores[ore] = (ores[ore] || 0) + amount;
+            if (!ores[oreName]) {
+                ores[oreName] = { amount: 0, multiplier: 0 };
+                oreTypesUsed++;
+            }
+
+            // Cap each ore amount to 4 for multiplier calculation
+            let cappedAmount = Math.min(amount, 4);
+            let oreData = window.oreData.find(o => o.name === oreName);
+            let multiplier = oreData ? oreData.multiplier : 0;
+
+            ores[oreName].amount += amount;
+            ores[oreName].multiplier = multiplier;
+
+            totalMultiplier += cappedAmount * multiplier;
         }
     }
 
@@ -21,7 +36,7 @@ document.getElementById("calculate-btn").onclick = () => {
     resultBox.innerHTML = "";
 
     for (let ore in ores) {
-        let pct = (ores[ore] / totalAmount) * 100;
+        let pct = (ores[ore].amount / totalAmount) * 100;
 
         let status = "";
         if (pct > 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}%)</span>`;
@@ -29,16 +44,21 @@ document.getElementById("calculate-btn").onclick = () => {
         else status = `${pct.toFixed(1)}%`;
 
         // optimal for 30–33.3%
-        let optimal = Math.ceil((totalAmount * 0.33) - ores[ore]);
+        let optimal = Math.ceil((totalAmount * 0.33) - ores[ore].amount);
         if (optimal < 0) optimal = 0;
 
         resultBox.innerHTML += `
             <p>
                 <b>${ore}</b>: ${status}  
                 <br>Optimal extra needed: ${optimal}
+                <br>Multiplier: ${ores[ore].multiplier}x
             </p>
         `;
     }
+
+    // Calculate overall multiplier
+    let overallMultiplier = oreTypesUsed ? (totalMultiplier / oreTypesUsed) : 0;
+    resultBox.innerHTML += `<p><b>Overall Multiplier:</b> ${overallMultiplier.toFixed(2)}x</p>`;
 
     // Weapon forging logic
     let weaponResult = document.getElementById("weapon-result");
@@ -50,9 +70,11 @@ document.getElementById("calculate-btn").onclick = () => {
     else weaponResult.innerText = "Unknown";
 };
 
+// Load ore data
 async function loadOres() {
     const response = await fetch("ores.json");
     const data = await response.json();
+    window.oreData = data.ores; // make global for multiplier lookup
 
     const selects = document.querySelectorAll(".ore-select");
 
