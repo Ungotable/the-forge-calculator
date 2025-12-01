@@ -1,5 +1,5 @@
 {
-  "crafting_by_ore": {
+  "crafting_weapon_by_ore": {
     "3": { "item": "Dagger", "chance": 100 },
     "4": { "item": "Dagger", "chance": 86 },
     "5": { "item": "Straight Sword", "chance": 65 },
