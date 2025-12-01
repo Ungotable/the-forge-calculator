@@ -17,14 +17,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
-        uses: actions/configure-pages@v3
-
-      - name: Upload artifact
+      # 2. Upload artifact for Pages
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: ./   # deploy everything in the root (HTML/CSS/JS/JSON)
+          path: ./   # deploy everything in the root
 
-      - name: Deploy
+      # 3. Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
