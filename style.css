@@ -96,25 +96,17 @@ select:focus, input:focus {
     margin-bottom: 3px;
 }
 
-The Forge Calculator
-Contact: Discord TeaOtaku
+.calculator-container {
+    display: flex;
+    gap: 20px;
+}
 
-Weapon Type: Great Axe 57%
+.left-panel {
+    flex: 1;
+}
 
-Armor Type: Medium Chestplate 60%
-
-Ores Used
-
-Demonite
-15
-
-Darkryte
-5
-
-Select Ore
-Amount
-
-Select Ore
-Amount
-Calculate
-Ore Breakdown
+.right-panel {
+    flex: 1;
+    border-left: 1px solid #ccc;
+    padding-left: 20px;
+}
