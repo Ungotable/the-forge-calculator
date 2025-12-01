@@ -3,39 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Calculator</title>
+    <title>Ore Calculator</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="calculator">
-        <input type="text" id="display" disabled>
+    <h2>Weapon Forge Calculator</h2>
 
-        <div class="buttons">
-            <button onclick="clearDisplay()">C</button>
-            <button onclick="appendValue('/')">÷</button>
-            <button onclick="appendValue('*')">×</button>
-            <button onclick="deleteLast()">⌫</button>
+    <!-- Weapon Result Box -->
+    <div class="weapon-box">
+        <p><b>Weapon Type:</b> <span id="weapon-result">None</span></p>
+    </div>
 
-            <button onclick="appendValue('7')">7</button>
-            <button onclick="appendValue('8')">8</button>
-            <button onclick="appendValue('9')">9</button>
-            <button onclick="appendValue('-')">−</button>
+    <h3>Ores Used</h3>
 
-            <button onclick="appendValue('4')">4</button>
-            <button onclick="appendValue('5')">5</button>
-            <button onclick="appendValue('6')">6</button>
-            <button onclick="appendValue('+')">+</button>
+    <div id="ore-area">
+        <div class="ore-row">
+            <select class="ore-select">
+                <option value="">None</option>
+                <option value="Diamond">Diamond</option>
+                <option value="Cuprite">Cuprite</option>
+            </select>
+            <input type="number" class="ore-amount" placeholder="Amount">
+        </div>
 
-            <button onclick="appendValue('1')">1</button>
-            <button onclick="appendValue('2')">2</button>
-            <button onclick="appendValue('3')">3</button>
-            <button class="equal" onclick="calculate()">=</button>
+        <div class="ore-row">
+            <select class="ore-select">
+                <option value="">None</option>
+                <option value="Diamond">Diamond</option>
+                <option value="Cuprite">Cuprite</option>
+            </select>
+            <input type="number" class="ore-amount" placeholder="Amount">
+        </div>
 
-            <button class="zero" onclick="appendValue('0')">0</button>
-            <button onclick="appendValue('.')">.</button>
+        <div class="ore-row">
+            <select class="ore-select">
+                <option value="">None</option>
+                <option value="Diamond">Diamond</option>
+                <option value="Cuprite">Cuprite</option>
+            </select>
+            <input type="number" class="ore-amount" placeholder="Amount">
+        </div>
+
+        <div class="ore-row">
+            <select class="ore-select">
+                <option value="">None</option>
+                <option value="Diamond">Diamond</option>
+                <option value="Cuprite">Cuprite</option>
+            </select>
+            <input type="number" class="ore-amount" placeholder="Amount">
         </div>
     </div>
+
+    <button id="calculate-btn">Calculate</button>
+
+    <h3>Ore Breakdown</h3>
+    <div id="results"></div>
 
     <script src="script.js"></script>
 </body>
