@@ -118,44 +118,54 @@ document.getElementById("calculate-btn").onclick = () => {
         : "<p>No armor variants available</p>";
 
     // Suggested extras (~balance 30%) with proper rebalance
+
     let balancedExtras = {};
     for (let ore in ores) balancedExtras[ore] = 0;
 
     let changed = true;
+
     while (changed) {
         changed = false;
 
         let tempTotal = 0;
-        for (let ore in ores) tempTotal += ores[ore].amount + balancedExtras[ore];
+        for (let ore in ores) {
+            tempTotal += ores[ore].amount + balancedExtras[ore];
+        }
 
         let percentages = {};
-        for (let ore in ores) percentages[ore] = (ores[ore].amount + balancedExtras[ore]) / tempTotal;
+        for (let ore in ores) {
+            percentages[ore] = (ores[ore].amount + balancedExtras[ore]) / tempTotal;
+        }
 
         for (let donor in ores) {
-            if (percentages[donor] > 0.3) {
-                let under30 = Object.keys(ores).filter(o => percentages[o] < 0.3);
+            if (percentages[donor] > 0.30) {
+
+                let under30 = Object.keys(ores).filter(o => percentages[o] < 0.30);
                 if (under30.length === 0) continue;
 
                 for (let receiver of under30) {
+
                     let donorAmount = ores[donor].amount + balancedExtras[donor];
                     let receiverAmount = ores[receiver].amount + balancedExtras[receiver];
 
-                    // Check if donor stays ≥30% after giving 1 unit
-                    if ((donorAmount - 1) / tempTotal >= 0.3) {
-                        balancedExtras[donor] -= 1;
+                    if ((donorAmount - 1) / tempTotal >= 0.30) {
+
+                        balancedExtras[donor] -= 1;   
                         balancedExtras[receiver] += 1;
+
                         changed = true;
-                        break; // shift one unit per iteration
+                        break;
                     }
                 }
             }
         }
     }
 
+    let newTotal = 0;
+    for (let ore in ores) newTotal += ores[ore].amount + balancedExtras[ore];
 
     // Display Ore Breakdown on its own section (right side)
     const resultBox = document.getElementById("results");
-    resultBox.innerHTML = "<h3>Ore Breakdown</h3>";
     for (let ore in ores) {
         let newAmount = ores[ore].amount + (balancedExtras[ore] || 0);
         let pct = (newAmount / newTotal) * 100;
