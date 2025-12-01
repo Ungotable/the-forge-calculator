@@ -1,3 +1,30 @@
+let oreData = [];
+
+// Fetch ore data from ores.json
+fetch('./ores.json')
+    .then(response => response.json())
+    .then(data => {
+        oreData = data.ores;
+        window.oreData = oreData; // for your existing code
+        populateSelects(oreData);
+    })
+    .catch(err => console.error("Failed to load ores.json:", err));
+
+// Populate all ore <select> dropdowns
+function populateSelects(ores) {
+    const selects = document.querySelectorAll(".ore-select");
+    selects.forEach(select => {
+        select.innerHTML = '<option value="">Select Ore</option>';
+        ores.forEach(ore => {
+            const option = document.createElement("option");
+            option.value = ore.name;
+            option.textContent = ore.name;
+            select.appendChild(option);
+        });
+    });
+}
+
+// Calculate button logic
 document.getElementById("calculate-btn").onclick = () => {
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
@@ -6,6 +33,7 @@ document.getElementById("calculate-btn").onclick = () => {
     let totalAmount = 0;
     let totalMultiplier = 0;
     let oreTypesUsed = 0;
+    let overallTraits = [];
 
     // Collect ore data
     for (let i = 0; i < oreSelects.length; i++) {
@@ -14,86 +42,52 @@ document.getElementById("calculate-btn").onclick = () => {
 
         if (oreName !== "" && amount > 0) {
             totalAmount += amount;
+
             if (!ores[oreName]) {
-                ores[oreName] = { amount: 0, multiplier: 0 };
+                ores[oreName] = { amount: 0, multiplier: 0, trait: "" };
                 oreTypesUsed++;
             }
 
-            // Cap each ore amount to 4 for multiplier calculation
             let cappedAmount = Math.min(amount, 4);
-            let oreData = window.oreData.find(o => o.name === oreName);
-            let multiplier = oreData ? oreData.multiplier : 0;
+            let ore = oreData.find(o => o.name === oreName);
+            let multiplier = ore ? ore.multiplier : 0;
+            let trait = ore ? ore.trait : "None";
 
             ores[oreName].amount += amount;
             ores[oreName].multiplier = multiplier;
+            ores[oreName].trait = trait;
 
             totalMultiplier += cappedAmount * multiplier;
+
+            if (trait && trait !== "None") overallTraits.push(`${oreName}: ${trait}`);
         }
     }
 
-    // Calculate percentages
-    let resultBox = document.getElementById("results");
+    // Display results
+    const resultBox = document.getElementById("results");
     resultBox.innerHTML = "";
 
     for (let ore in ores) {
-        let pct = (ores[ore].amount / totalAmount) * 100;
+        let currentPct = totalAmount > 0 ? (ores[ore].amount / totalAmount) * 100 : 0;
+        let neededPct = Math.max(0, 30 - currentPct);
 
-        let status = "";
-        if (pct > 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}%)</span>`;
-        else if (pct > 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}%)</span>`;
-        else status = `${pct.toFixed(1)}%`;
-
-        // optimal for 30–33.3%
-        let optimal = Math.ceil((totalAmount * 0.33) - ores[ore].amount);
-        if (optimal < 0) optimal = 0;
+        let status = currentPct >= 30
+            ? `<span class='maxed'>MAXED (${currentPct.toFixed(1)}% Traits Maxed)</span>`
+            : `<span class='check-good'>${currentPct.toFixed(1)}% Traits available - Need ${neededPct.toFixed(1)}% more to max</span>`;
 
         resultBox.innerHTML += `
             <p>
-                <b>${ore}</b>: ${status}  
-                <br>Optimal extra needed: ${optimal}
-                <br>Multiplier: ${ores[ore].multiplier}x
+                <b>${ore}</b>: ${status}<br>
+                Multiplier: ${ores[ore].multiplier}x
+                ${ores[ore].trait !== "None" ? `<br>Trait: ${ores[ore].trait}` : ""}
             </p>
         `;
     }
 
-    // Calculate overall multiplier
+    // Overall multiplier
     let overallMultiplier = oreTypesUsed ? (totalMultiplier / oreTypesUsed) : 0;
     resultBox.innerHTML += `<p><b>Overall Multiplier:</b> ${overallMultiplier.toFixed(2)}x</p>`;
 
-    // Weapon forging logic
-    let weaponResult = document.getElementById("weapon-result");
-
-    if (totalAmount <= 2) weaponResult.innerText = "Cannot Forge";
-    else if (totalAmount === 3) weaponResult.innerText = "100% Dagger";
-    else if (totalAmount === 4 || totalAmount === 5) weaponResult.innerText = "Straight Sword (chance)";
-    else if (totalAmount === 6) weaponResult.innerText = "84% Straight Sword";
-    else weaponResult.innerText = "Unknown";
+    // Overall traits
+    resultBox.innerHTML += `<p><b>Overall Traits:</b><br>${overallTraits.length > 0 ? overallTraits.map(t => "- " + t).join("<br>") : "-"}</p>`;
 };
-
-// Load ore data
-async function loadOres() {
-    const response = await fetch("ores.json");
-    const data = await response.json();
-    window.oreData = data.ores; // make global for multiplier lookup
-
-    const selects = document.querySelectorAll(".ore-select");
-
-    selects.forEach(select => {
-        // First option = "None"
-        let noneOption = document.createElement("option");
-        noneOption.value = "";
-        noneOption.textContent = "None";
-        select.appendChild(noneOption);
-
-        // Populate ore list
-        data.ores.forEach(ore => {
-            let option = document.createElement("option");
-            option.value = ore.name;
-            option.textContent = ore.name;
-            select.appendChild(option);
-        });
-    });
-}
-
-// load ore list on page start
-loadOres();
