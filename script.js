@@ -87,7 +87,11 @@ document.getElementById("calculate-btn").onclick = () => {
     else if (totalAmount >= 6) armorTypeName = "Medium Armor";
     else if (totalAmount >= 3) armorTypeName = "Light Armor";
 
-    // Display Weapon variants
+    // Display only the type names
+    document.getElementById("weapon-result").textContent = weaponType;
+    document.getElementById("armor-result").textContent = armorTypeName;
+
+    // Display detailed weapon variants on right side
     const weaponBox = document.getElementById("weapon-stats");
     weaponBox.innerHTML = weaponType !== "None" && weapontype[weaponType]
         ? `<h4>${weaponType} Variants:</h4>` + weapontype[weaponType].map(w => `
@@ -99,9 +103,9 @@ document.getElementById("calculate-btn").onclick = () => {
                 Price: ${w.price}g
             </p>
         `).join('')
-        : "<p>None</p>";
+        : "<p>No weapon variants available</p>";
 
-    // Display Armor variants
+    // Display detailed armor variants on right side
     const armorBox = document.getElementById("armor-stats");
     armorBox.innerHTML = armorTypeName !== "None" && armortype[armorTypeName]
         ? `<h4>${armorTypeName} Variants:</h4>` + armortype[armorTypeName].map(a => `
@@ -111,24 +115,48 @@ document.getElementById("calculate-btn").onclick = () => {
                 Price: ${a.price}$
             </p>
         `).join('')
-        : "<p>None</p>";
+        : "<p>No armor variants available</p>";
 
-    // Suggested extras (~balance 30%)
+    // Suggested extras (~balance 30%) with proper rebalance
     let balancedExtras = {};
-    let newTotal = totalAmount;
-    for (let ore in ores) {
-        let currentPct = ores[ore].amount / newTotal;
-        let suggestedExtra = 0;
-        const targetPct = 0.3;
-        if (currentPct < targetPct) {
-            suggestedExtra = Math.ceil((targetPct * newTotal - ores[ore].amount));
-            suggestedExtra = Math.max(suggestedExtra, 0);
+    for (let ore in ores) balancedExtras[ore] = 0;
+
+    let changed = true;
+    while (changed) {
+        changed = false;
+
+        // Calculate total including extras
+        let tempTotal = 0;
+        for (let ore in ores) tempTotal += ores[ore].amount + balancedExtras[ore];
+
+        // Calculate current percentages
+        let percentages = {};
+        for (let ore in ores) percentages[ore] = (ores[ore].amount + balancedExtras[ore]) / tempTotal;
+
+        // Shift 1 unit from over-30% ores to under-30% ores
+        for (let donor in ores) {
+            if (percentages[donor] > 0.3) {
+                let under30 = Object.keys(ores).filter(o => percentages[o] < 0.3);
+                if (under30.length === 0) continue;
+
+                for (let receiver of under30) {
+                    let donorAmount = ores[donor].amount + balancedExtras[donor];
+                    let receiverAmount = ores[receiver].amount + balancedExtras[receiver];
+
+                    // Check if donor stays ≥30% after giving 1 unit
+                    if ((donorAmount - 1) / tempTotal >= 0.3) {
+                        balancedExtras[donor] -= 1;
+                        balancedExtras[receiver] += 1;
+                        changed = true;
+                        break; // shift one unit per iteration
+                    }
+                }
+            }
         }
-        balancedExtras[ore] = suggestedExtra;
-        newTotal += suggestedExtra;
     }
 
-    // Display Ore Breakdown
+
+    // Display Ore Breakdown on its own section (right side)
     const resultBox = document.getElementById("results");
     resultBox.innerHTML = "<h3>Ore Breakdown</h3>";
     for (let ore in ores) {
