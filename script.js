@@ -2,36 +2,47 @@ let oreData = [];
 let armortype = {};
 let weapontype = {};
 
-// Fetch ores.json
+let dataLoaded = {
+    ores: false,
+    armors: false,
+    weapons: false
+};
+
+// Update fetches
 fetch('./ores.json')
     .then(res => res.json())
     .then(data => {
         oreData = data.ores;
         populateSelects(oreData);
-    })
-    .catch(err => console.error("Failed to load ores.json:", err));
+        dataLoaded.ores = true;
+    });
 
-// Fetch armors.json
 fetch('./armors.json')
     .then(res => res.json())
-    .then(data => armortype = data.crafting_armor_by_ore)
-    .catch(err => console.error("Failed to load armors.json:", err));
+    .then(data => {
+        armortype = data.crafting_armor_by_ore;
+        dataLoaded.armors = true;
+    });
 
-// Fetch weapons.json
 fetch('./weapons.json')
     .then(res => res.json())
-    .then(data => weapontype = data.crafting_weapon_by_ore)
-    .catch(err => console.error("Failed to load weapons.json:", err));
+    .then(data => {
+        weapontype = data.crafting_weapon_by_ore;
+        dataLoaded.weapons = true;
+    });
 
 // --- helper function ---
 function getCraftableFromJSON(craftingJSON, total) {
-    if (!craftingJSON) return null; // avoid errors
+    if (!craftingJSON || Object.keys(craftingJSON).length === 0) return null; // safety check
+
     const keys = Object.keys(craftingJSON).map(k => parseInt(k)).sort((a,b) => a-b);
+
     let selectedKey = keys[0];
     for (let k of keys) {
         if (k <= total) selectedKey = k;
         else break;
     }
+
     return craftingJSON[selectedKey];
 }
 
@@ -51,6 +62,9 @@ function populateSelects(ores) {
 
 // --- Calculate button ---
 document.getElementById("calculate-btn").onclick = () => {
+    if (!dataLoaded.ores || !dataLoaded.armors || !dataLoaded.weapons) {
+        return alert("Please wait, data is still loading!");
+    }
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
 
