@@ -167,6 +167,7 @@ document.getElementById("calculate-btn").onclick = () => {
         }
     }
     let newTotal = 0;
+    
     for (let ore in ores) {
         newTotal += ores[ore].amount + balancedExtras[ore];
     }
