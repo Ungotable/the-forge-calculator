@@ -11,19 +11,31 @@ fetch('./ores.json')
     })
     .catch(err => console.error("Failed to load ores.json:", err));
 
-// Fetch armortype.json
-fetch('./armortype.json')
+// Fetch armors.json
+fetch('./armors.json')
     .then(res => res.json())
-    .then(data => armortype = data)
-    .catch(err => console.error("Failed to load armortype.json:", err));
+    .then(data => armortype = data.crafting_armor_by_ore)
+    .catch(err => console.error("Failed to load armors.json:", err));
 
-// Fetch weapontype.json
-fetch('./weapontype.json')
+// Fetch weapons.json
+fetch('./weapons.json')
     .then(res => res.json())
-    .then(data => weapontype = data)
-    .catch(err => console.error("Failed to load weapontype.json:", err));
+    .then(data => weapontype = data.crafting_weapon_by_ore)
+    .catch(err => console.error("Failed to load weapons.json:", err));
 
-// Populate ore dropdowns
+// --- helper function ---
+function getCraftableFromJSON(craftingJSON, total) {
+    if (!craftingJSON) return null; // avoid errors
+    const keys = Object.keys(craftingJSON).map(k => parseInt(k)).sort((a,b) => a-b);
+    let selectedKey = keys[0];
+    for (let k of keys) {
+        if (k <= total) selectedKey = k;
+        else break;
+    }
+    return craftingJSON[selectedKey];
+}
+
+// Populate dropdowns
 function populateSelects(ores) {
     const selects = document.querySelectorAll(".ore-select");
     selects.forEach(select => {
@@ -37,18 +49,7 @@ function populateSelects(ores) {
     });
 }
 
-// --- Helper: Determine craftable weapon/armor dynamically from JSON ---
-function getCraftableFromJSON(craftingJSON, total) {
-    const keys = Object.keys(craftingJSON).map(k => parseInt(k)).sort((a,b) => a-b);
-    let selectedKey = keys[0];
-    for (let k of keys) {
-        if (k <= total) selectedKey = k;
-        else break;
-    }
-    return craftingJSON[selectedKey];
-}
-
-// Calculate button
+// --- Calculate button ---
 document.getElementById("calculate-btn").onclick = () => {
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
@@ -91,44 +92,28 @@ document.getElementById("calculate-btn").onclick = () => {
         }
     }
 
-    // --- Determine craftable weapon/armor dynamically from JSON ---
-    let weaponCraftData = getCraftableFromJSON(weapontype.crafting_weapon_by_ore, totalAmount);
+    // Determine craftable weapon/armor from JSON
+    let weaponCraftData = getCraftableFromJSON(weapontype, totalAmount);
     let weaponType = weaponCraftData ? weaponCraftData.item : "None";
     let weaponChance = weaponCraftData ? weaponCraftData.chance : 0;
 
-    let armorCraftData = getCraftableFromJSON(armortype.crafting_armor_by_ore, totalAmount);
+    let armorCraftData = getCraftableFromJSON(armortype, totalAmount);
     let armorTypeName = armorCraftData ? armorCraftData.item : "None";
     let armorChance = armorCraftData ? armorCraftData.chance : 0;
 
-    // Update UI with type names
+    // Update UI
     document.getElementById("weapon-result").textContent = weaponType;
     document.getElementById("armor-result").textContent = armorTypeName;
 
-    // Display detailed weapon variants
     const weaponBox = document.getElementById("weapon-stats");
-    weaponBox.innerHTML = weaponType !== "None" && weapontype[weaponType]
-        ? `<h4>${weaponType} Variants:</h4>` + weapontype[weaponType].map(w => `
-            <p>
-                <b>${w.name}</b> (Chance: ${w.chance})<br>
-                Damage: ${w.damage}<br>
-                Speed: ${w.speed}s<br>
-                Range: ${w.range}<br>
-                Price: ${w.price}g
-            </p>
-        `).join('')
-        : "<p>No weapon variants available</p>";
+    weaponBox.innerHTML = weaponType !== "None" ? `
+        <p><b>${weaponType}</b> Chance: ${weaponChance}%</p>
+    ` : "<p>No weapon variants available</p>";
 
-    // Display detailed armor variants
     const armorBox = document.getElementById("armor-stats");
-    armorBox.innerHTML = armorTypeName !== "None" && armortype[armorTypeName]
-        ? `<h4>${armorTypeName} Variants:</h4>` + armortype[armorTypeName].map(a => `
-            <p>
-                <b>${a.name}</b> (Chance: ${a.chance})<br>
-                Health: +${a.health}%<br>
-                Price: ${a.price}$
-            </p>
-        `).join('')
-        : "<p>No armor variants available</p>";
+    armorBox.innerHTML = armorTypeName !== "None" ? `
+        <p><b>${armorTypeName}</b> Chance: ${armorChance}%</p>
+    ` : "<p>No armor variants available</p>";
 
     // Suggested extras (~balance 30%)
     let balancedExtras = {};
