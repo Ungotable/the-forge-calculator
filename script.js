@@ -67,8 +67,17 @@ document.getElementById("calculate-btn").onclick = () => {
             ores[oreName].amount += amount;
             ores[oreName].multiplier = multiplier;
             ores[oreName].trait = trait;
+            // Count multiplier ONCE per ore type
+            if (!ores[oreName].counted) {
+                totalMultiplier += multiplier;
+                ores[oreName].counted = true;
+            }
 
-            totalMultiplier += multiplier;
+            // Add trait once per ore type
+            if (trait !== "None" && !ores[oreName].traitCounted) {
+                overallTraits.push(`${oreName}: ${trait}`);
+                ores[oreName].traitCounted = true;
+            }
 
             if (trait !== "None") overallTraits.push(`${oreName}: ${trait}`);
         }
