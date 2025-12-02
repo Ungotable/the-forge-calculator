@@ -1,6 +1,6 @@
-let oresLoaded = false;
-let armorsLoaded = false;
-let weaponsLoaded = false;
+let oreData = [];
+let armortype = {};
+let weapontype = {};
 
 // Fetch ores.json
 fetch('./ores.json')
@@ -8,43 +8,37 @@ fetch('./ores.json')
     .then(data => {
         oreData = data.ores;
         populateSelects(oreData);
-        oresLoaded = true;
     })
     .catch(err => console.error("Failed to load ores.json:", err));
 
 // Fetch armortype.json
 fetch('./armortype.json')
     .then(res => res.json())
-    .then(data => {
-        armortype = data;
-        armorsLoaded = true;
-    })
+    .then(data => armortype = data)
     .catch(err => console.error("Failed to load armortype.json:", err));
 
 // Fetch weapontype.json
 fetch('./weapontype.json')
     .then(res => res.json())
-    .then(data => {
-        weapontype = data;
-        weaponsLoaded = true;
-    })
+    .then(data => weapontype = data)
     .catch(err => console.error("Failed to load weapontype.json:", err));
+
+// Populate ore dropdowns
+function populateSelects(ores) {
+    const selects = document.querySelectorAll(".ore-select");
+    selects.forEach(select => {
+        select.innerHTML = '<option value="">Select Ore</option>';
+        ores.forEach(ore => {
+            const option = document.createElement("option");
+            option.value = ore.name;
+            option.textContent = ore.name;
+            select.appendChild(option);
+        });
+    });
+}
 
 // Calculate button
 document.getElementById("calculate-btn").onclick = () => {
-    if (!weapontype.crafting_weapon_by_ore || !armortype.crafting_armor_by_ore) {
-        alert("Weapon or armor data not loaded yet. Please wait a moment.");
-        return;
-    }
-
-    // safe to call getCraftableItem now
-    const weaponResult = getCraftableItem(totalAmount, weapontype.crafting_weapon_by_ore);
-    const armorResult = getCraftableItem(totalAmount, armortype.crafting_armor_by_ore);
-
-    document.getElementById("weapon-result").textContent = weaponResult.item;
-    document.getElementById("armor-result").textContent = armorResult.item;
-};
-
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
 
@@ -87,33 +81,21 @@ document.getElementById("calculate-btn").onclick = () => {
         }
     }
 
-// Determine craftable weapon/armor type from JSON
-function getCraftableItem(totalAmount, jsonData) {
-    if (!jsonData || Object.keys(jsonData).length === 0) {
-        return { item: "None", chance: 0 }; // avoid errors
-    }
+    // Determine craftable weapon/armor type
+    let weaponType = "None";
+    if (totalAmount >= 15) weaponType = "Colossal Swords";
+    else if (totalAmount >= 10) weaponType = "Great Swords";
+    else if (totalAmount >= 5) weaponType = "Straight Swords";
+    else if (totalAmount >= 1) weaponType = "Daggers";
 
-    const keys = Object.keys(jsonData).map(k => parseInt(k)).sort((a, b) => a - b);
-    let selectedKey = null;
-    for (let k of keys) {
-        if (totalAmount >= k) selectedKey = k;
-    }
-    return selectedKey !== null
-        ? { item: jsonData[selectedKey].item, chance: jsonData[selectedKey].chance }
-        : { item: "None", chance: 0 };
-}
-
-
-    const weaponResult = getCraftableItem(totalAmount, weapontype.crafting_weapon_by_ore);
-    const armorResult = getCraftableItem(totalAmount, armortype.crafting_armor_by_ore);
+    let armorTypeName = "None";
+    if (totalAmount >= 10) armorTypeName = "Heavy Armor";
+    else if (totalAmount >= 6) armorTypeName = "Medium Armor";
+    else if (totalAmount >= 3) armorTypeName = "Light Armor";
 
     // Display only the type names
-    document.getElementById("weapon-result").textContent = weaponResult.item;
-    document.getElementById("armor-result").textContent = armorResult.item;
-
-    // Optional: also show chance
-    document.getElementById("weapon-chance").textContent = weaponResult.chance + "%";
-    document.getElementById("armor-chance").textContent = armorResult.chance + "%";
+    document.getElementById("weapon-result").textContent = weaponType;
+    document.getElementById("armor-result").textContent = armorTypeName;
 
     // Display detailed weapon variants on right side
     const weaponBox = document.getElementById("weapon-stats");
@@ -185,7 +167,6 @@ function getCraftableItem(totalAmount, jsonData) {
         }
     }
     let newTotal = 0;
-    
     for (let ore in ores) {
         newTotal += ores[ore].amount + balancedExtras[ore];
     }
