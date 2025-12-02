@@ -78,8 +78,6 @@ document.getElementById("calculate-btn").onclick = () => {
                 overallTraits.push(`${oreName}: ${trait}`);
                 ores[oreName].traitCounted = true;
             }
-
-            if (trait !== "None") overallTraits.push(`${oreName}: ${trait}`);
         }
     }
 
@@ -175,7 +173,6 @@ document.getElementById("calculate-btn").onclick = () => {
 
     // Display Ore Breakdown on its own section (right side)
     const resultBox = document.getElementById("results");
-    resultBox.innerHTML = "<h3>Ore Breakdown</h3>";
 
     let originalTotal = totalAmount;
 
