@@ -168,13 +168,13 @@ document.getElementById("calculate-btn").onclick = () => {
     const resultBox = document.getElementById("results");
     resultBox.innerHTML = "<h3>Ore Breakdown</h3>";
 
-    let originalTotal = totalAmount; // ORIGINAL total before suggestions
+    let originalTotal = totalAmount;
 
     for (let ore in ores) {
-        let originalAmount = ores[ore].amount; // NO suggested extras
+        let originalAmount = ores[ore].amount; 
         let suggested = balancedExtras[ore] || 0;
 
-        let pct = (originalAmount / originalTotal) * 100; // percentage BEFORE suggestions
+        let pct = (originalAmount / originalTotal) * 100; 
 
         let status = "";
         if (pct >= 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>`;
