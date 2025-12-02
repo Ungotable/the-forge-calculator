@@ -94,7 +94,7 @@ document.getElementById("calculate-btn").onclick = () => {
         armorItem = armorCraftData[totalAmount].item;
         armorChance = armorCraftData[totalAmount].chance;
     } else {
-        let keys = Object.keys(armorCraftData).map(k => parseInt(k)).sort((a,b) => a-b);
+        let keys = Object.keys(armorCraftData).map(k => parseInt(k)).sort((a, b) => a - b);
         for (let k of keys.reverse()) {
             if (totalAmount >= k) {
                 armorItem = armorCraftData[k].item;
@@ -114,26 +114,36 @@ document.getElementById("calculate-btn").onclick = () => {
 
     const weaponBox = document.getElementById("weapon-stats");
     if (weapontype[weaponType]) {
-        weaponBox.innerHTML = `<h4>${weaponType} Variants:</h4>` + weapontype[weaponType].map(w => `
+        weaponBox.innerHTML = `<h4>${weaponType} Variants:</h4>` + weapontype[weaponType].map(w => {
+            let chance = weapontype.crafting_weapon_by_ore?.[totalAmount]?.item === w.name
+                ? weapontype.crafting_weapon_by_ore[totalAmount].chance
+                : w.chance;
+            return `
             <p>
-                <b>${w.name}</b> (Chance: ${w.chance}%)<br>
+                <b>${w.name}</b> (Chance: ${chance}%)<br>
                 Damage: ${w.damage}<br>
                 Speed: ${w.speed}s<br>
                 Range: ${w.range}<br>
                 Price: ${w.price}g
             </p>
-        `).join('');
+        `;
+        }).join('');
     } else weaponBox.innerHTML = "<p>No weapon variants available</p>";
 
     const armorBox = document.getElementById("armor-stats");
     if (armortype[armorItem]) {
-        armorBox.innerHTML = `<h4>${armorItem} Variants:</h4>` + armortype[armorItem].map(a => `
+        armorBox.innerHTML = `<h4>${armorItem} Variants:</h4>` + armortype[armorItem].map(a => {
+            let chance = armortype.crafting_armor_by_ore?.[totalAmount]?.item === a.name
+                ? armortype.crafting_armor_by_ore[totalAmount].chance
+                : a.chance;
+            return `
             <p>
-                <b>${a.name}</b> (Chance: ${a.chance}%)<br>
+                <b>${a.name}</b> (Chance: ${chance}%)<br>
                 Health: +${a.health}%<br>
                 Price: ${a.price}$
             </p>
-        `).join('');
+        `;
+        }).join('');
     } else armorBox.innerHTML = "<p>No armor variants available</p>";
 
     let balancedExtras = {};
@@ -168,9 +178,9 @@ document.getElementById("calculate-btn").onclick = () => {
     let originalTotal = totalAmount;
     resultBox.innerHTML = "";
     for (let ore in ores) {
-        let originalAmount = ores[ore].amount; 
+        let originalAmount = ores[ore].amount;
         let suggested = balancedExtras[ore] || 0;
-        let pct = (originalAmount / originalTotal) * 100; 
+        let pct = (originalAmount / originalTotal) * 100;
         let status = "";
         if (pct >= 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>`;
         else if (pct >= 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}% Traits available)</span>`;
