@@ -115,19 +115,49 @@ document.getElementById("calculate-btn").onclick = () => {
     let armorTypeName = armorCraftData ? armorCraftData.item : "None";
     let armorChance = armorCraftData ? armorCraftData.chance : 0;
 
-    // Update UI
-    document.getElementById("weapon-result").textContent = weaponType;
-    document.getElementById("armor-result").textContent = armorTypeName;
+    // --- Determine craftable weapon/armor from JSON
+    let weaponCraftData = getCraftableFromJSON(weapontype, totalAmount);
+    let weaponType = weaponCraftData ? weaponCraftData.item : "None";
+    let weaponChance = weaponCraftData ? weaponCraftData.chance : 0;
 
+    let armorCraftData = getCraftableFromJSON(armortype, totalAmount);
+    let armorTypeName = armorCraftData ? armorCraftData.item : "None";
+    let armorChance = armorCraftData ? armorCraftData.chance : 0;
+
+    // --- Update UI for type names
+    document.getElementById("weapon-result").textContent = `Weapon Type: ${weaponType}`;
+    document.getElementById("armor-result").textContent = `Armor Type: ${armorTypeName}`;
+
+    // --- Display detailed variants with stats
     const weaponBox = document.getElementById("weapon-stats");
-    weaponBox.innerHTML = weaponType !== "None" ? `
-        <p><b>${weaponType}</b> Chance: ${weaponChance}%</p>
-    ` : "<p>No weapon variants available</p>";
+    if (weaponType !== "None" && weapontype[weaponType]) {
+        weaponBox.innerHTML = `<h4>${weaponType}</h4>
+            <p>Chance: ${weaponChance}%</p>` + weapontype[weaponType].map(w => `
+            <p>
+                <b>${w.name}</b> (Chance: ${w.chance})<br>
+                Damage: ${w.damage}<br>
+                Speed: ${w.speed}s<br>
+                Range: ${w.range}<br>
+                Price: ${w.price}g
+            </p>
+        `).join('');
+    } else {
+        weaponBox.innerHTML = "<p>No weapon variants available</p>";
+    }
 
     const armorBox = document.getElementById("armor-stats");
-    armorBox.innerHTML = armorTypeName !== "None" ? `
-        <p><b>${armorTypeName}</b> Chance: ${armorChance}%</p>
-    ` : "<p>No armor variants available</p>";
+    if (armorTypeName !== "None" && armortype[armorTypeName]) {
+        armorBox.innerHTML = `<h4>${armorTypeName}</h4>
+            <p>Chance: ${armorChance}%</p>` + armortype[armorTypeName].map(a => `
+            <p>
+                <b>${a.name}</b> (Chance: ${a.chance})<br>
+                Health: +${a.health}%<br>
+                Price: ${a.price}$
+            </p>
+        `).join('');
+    } else {
+        armorBox.innerHTML = "<p>No armor variants available</p>";
+    }
 
     // Suggested extras (~balance 30%)
     let balancedExtras = {};
