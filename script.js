@@ -1,6 +1,6 @@
-let oreData = [];
-let armortype = {};
-let weapontype = {};
+let oresLoaded = false;
+let armorsLoaded = false;
+let weaponsLoaded = false;
 
 // Fetch ores.json
 fetch('./ores.json')
@@ -8,37 +8,34 @@ fetch('./ores.json')
     .then(data => {
         oreData = data.ores;
         populateSelects(oreData);
+        oresLoaded = true;
     })
     .catch(err => console.error("Failed to load ores.json:", err));
 
 // Fetch armortype.json
 fetch('./armortype.json')
     .then(res => res.json())
-    .then(data => armortype = data)
+    .then(data => {
+        armortype = data;
+        armorsLoaded = true;
+    })
     .catch(err => console.error("Failed to load armortype.json:", err));
 
 // Fetch weapontype.json
 fetch('./weapontype.json')
     .then(res => res.json())
-    .then(data => weapontype = data)
+    .then(data => {
+        weapontype = data;
+        weaponsLoaded = true;
+    })
     .catch(err => console.error("Failed to load weapontype.json:", err));
-
-// Populate ore dropdowns
-function populateSelects(ores) {
-    const selects = document.querySelectorAll(".ore-select");
-    selects.forEach(select => {
-        select.innerHTML = '<option value="">Select Ore</option>';
-        ores.forEach(ore => {
-            const option = document.createElement("option");
-            option.value = ore.name;
-            option.textContent = ore.name;
-            select.appendChild(option);
-        });
-    });
-}
 
 // Calculate button
 document.getElementById("calculate-btn").onclick = () => {
+    if (!oresLoaded || !armorsLoaded || !weaponsLoaded) {
+        alert("Data not fully loaded yet. Please wait a moment.");
+        return;
+    }
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
 
