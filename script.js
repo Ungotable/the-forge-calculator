@@ -32,10 +32,19 @@ fetch('./weapontype.json')
 
 // Calculate button
 document.getElementById("calculate-btn").onclick = () => {
-    if (!oresLoaded || !armorsLoaded || !weaponsLoaded) {
-        alert("Data not fully loaded yet. Please wait a moment.");
+    if (!weapontype.crafting_weapon_by_ore || !armortype.crafting_armor_by_ore) {
+        alert("Weapon or armor data not loaded yet. Please wait a moment.");
         return;
     }
+
+    // safe to call getCraftableItem now
+    const weaponResult = getCraftableItem(totalAmount, weapontype.crafting_weapon_by_ore);
+    const armorResult = getCraftableItem(totalAmount, armortype.crafting_armor_by_ore);
+
+    document.getElementById("weapon-result").textContent = weaponResult.item;
+    document.getElementById("armor-result").textContent = armorResult.item;
+};
+
     const oreSelects = document.querySelectorAll(".ore-select");
     const oreAmounts = document.querySelectorAll(".ore-amount");
 
@@ -80,21 +89,20 @@ document.getElementById("calculate-btn").onclick = () => {
 
 // Determine craftable weapon/armor type from JSON
 function getCraftableItem(totalAmount, jsonData) {
-    // Find the closest key ≤ totalAmount
+    if (!jsonData || Object.keys(jsonData).length === 0) {
+        return { item: "None", chance: 0 }; // avoid errors
+    }
+
     const keys = Object.keys(jsonData).map(k => parseInt(k)).sort((a, b) => a - b);
     let selectedKey = null;
     for (let k of keys) {
         if (totalAmount >= k) selectedKey = k;
     }
-    if (selectedKey !== null) {
-        return {
-            item: jsonData[selectedKey].item,
-            chance: jsonData[selectedKey].chance
-        };
-    } else {
-        return { item: "None", chance: 0 };
-    }
+    return selectedKey !== null
+        ? { item: jsonData[selectedKey].item, chance: jsonData[selectedKey].chance }
+        : { item: "None", chance: 0 };
 }
+
 
     const weaponResult = getCraftableItem(totalAmount, weapontype.crafting_weapon_by_ore);
     const armorResult = getCraftableItem(totalAmount, armortype.crafting_armor_by_ore);
