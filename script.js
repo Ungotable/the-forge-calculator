@@ -171,7 +171,7 @@ document.getElementById("calculate-btn").onclick = () => {
         newTotal += ores[ore].amount + balancedExtras[ore];
     }
 
-    // Display Ore Breakdown on its own section (right side)
+    // Display Ore Breakdown on its own section
     const resultBox = document.getElementById("results");
 
     let originalTotal = totalAmount;
