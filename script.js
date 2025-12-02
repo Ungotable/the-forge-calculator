@@ -37,6 +37,17 @@ function populateSelects(ores) {
     });
 }
 
+// --- Helper: Determine craftable weapon/armor dynamically from JSON ---
+function getCraftableFromJSON(craftingJSON, total) {
+    const keys = Object.keys(craftingJSON).map(k => parseInt(k)).sort((a,b) => a-b);
+    let selectedKey = keys[0];
+    for (let k of keys) {
+        if (k <= total) selectedKey = k;
+        else break;
+    }
+    return craftingJSON[selectedKey];
+}
+
 // Calculate button
 document.getElementById("calculate-btn").onclick = () => {
     const oreSelects = document.querySelectorAll(".ore-select");
@@ -67,13 +78,12 @@ document.getElementById("calculate-btn").onclick = () => {
             ores[oreName].amount += amount;
             ores[oreName].multiplier = multiplier;
             ores[oreName].trait = trait;
-            // Count multiplier ONCE per ore type
+
             if (!ores[oreName].counted) {
                 totalMultiplier += multiplier;
                 ores[oreName].counted = true;
             }
 
-            // Add trait once per ore type
             if (trait !== "None" && !ores[oreName].traitCounted) {
                 overallTraits.push(`${oreName}: ${trait}`);
                 ores[oreName].traitCounted = true;
@@ -81,23 +91,20 @@ document.getElementById("calculate-btn").onclick = () => {
         }
     }
 
-    // Determine craftable weapon/armor type
-    let weaponType = "None";
-    if (totalAmount >= 15) weaponType = "Colossal Swords";
-    else if (totalAmount >= 10) weaponType = "Great Swords";
-    else if (totalAmount >= 5) weaponType = "Straight Swords";
-    else if (totalAmount >= 1) weaponType = "Daggers";
+    // --- Determine craftable weapon/armor dynamically from JSON ---
+    let weaponCraftData = getCraftableFromJSON(weapontype.crafting_weapon_by_ore, totalAmount);
+    let weaponType = weaponCraftData ? weaponCraftData.item : "None";
+    let weaponChance = weaponCraftData ? weaponCraftData.chance : 0;
 
-    let armorTypeName = "None";
-    if (totalAmount >= 10) armorTypeName = "Heavy Armor";
-    else if (totalAmount >= 6) armorTypeName = "Medium Armor";
-    else if (totalAmount >= 3) armorTypeName = "Light Armor";
+    let armorCraftData = getCraftableFromJSON(armortype.crafting_armor_by_ore, totalAmount);
+    let armorTypeName = armorCraftData ? armorCraftData.item : "None";
+    let armorChance = armorCraftData ? armorCraftData.chance : 0;
 
-    // Display only the type names
+    // Update UI with type names
     document.getElementById("weapon-result").textContent = weaponType;
     document.getElementById("armor-result").textContent = armorTypeName;
 
-    // Display detailed weapon variants on right side
+    // Display detailed weapon variants
     const weaponBox = document.getElementById("weapon-stats");
     weaponBox.innerHTML = weaponType !== "None" && weapontype[weaponType]
         ? `<h4>${weaponType} Variants:</h4>` + weapontype[weaponType].map(w => `
@@ -111,7 +118,7 @@ document.getElementById("calculate-btn").onclick = () => {
         `).join('')
         : "<p>No weapon variants available</p>";
 
-    // Display detailed armor variants on right side
+    // Display detailed armor variants
     const armorBox = document.getElementById("armor-stats");
     armorBox.innerHTML = armorTypeName !== "None" && armortype[armorTypeName]
         ? `<h4>${armorTypeName} Variants:</h4>` + armortype[armorTypeName].map(a => `
@@ -123,42 +130,29 @@ document.getElementById("calculate-btn").onclick = () => {
         `).join('')
         : "<p>No armor variants available</p>";
 
-    // Suggested extras (~balance 30%) with proper rebalance
-
+    // Suggested extras (~balance 30%)
     let balancedExtras = {};
     for (let ore in ores) balancedExtras[ore] = 0;
 
     let changed = true;
-
     while (changed) {
         changed = false;
-
         let tempTotal = 0;
-        for (let ore in ores) {
-            tempTotal += ores[ore].amount + balancedExtras[ore];
-        }
+        for (let ore in ores) tempTotal += ores[ore].amount + balancedExtras[ore];
 
         let percentages = {};
-        for (let ore in ores) {
-            percentages[ore] = (ores[ore].amount + balancedExtras[ore]) / tempTotal;
-        }
+        for (let ore in ores) percentages[ore] = (ores[ore].amount + balancedExtras[ore]) / tempTotal;
 
         for (let donor in ores) {
             if (percentages[donor] > 0.30) {
-
                 let under30 = Object.keys(ores).filter(o => percentages[o] < 0.30);
                 if (under30.length === 0) continue;
 
                 for (let receiver of under30) {
-
                     let donorAmount = ores[donor].amount + balancedExtras[donor];
-                    let receiverAmount = ores[receiver].amount + balancedExtras[receiver];
-
                     if ((donorAmount - 1) / tempTotal >= 0.30) {
-
                         balancedExtras[donor] -= 1;
                         balancedExtras[receiver] += 1;
-
                         changed = true;
                         break;
                     }
@@ -166,26 +160,19 @@ document.getElementById("calculate-btn").onclick = () => {
             }
         }
     }
-    let newTotal = 0;
-    for (let ore in ores) {
-        newTotal += ores[ore].amount + balancedExtras[ore];
-    }
 
-    // Display Ore Breakdown on its own section (right side)
+    // Display Ore Breakdown
     const resultBox = document.getElementById("results");
-
+    resultBox.innerHTML = ""; // Clear previous
     let originalTotal = totalAmount;
 
     for (let ore in ores) {
         let originalAmount = ores[ore].amount; 
         let suggested = balancedExtras[ore] || 0;
-
         let pct = (originalAmount / originalTotal) * 100; 
-
-        let status = "";
-        if (pct >= 30) status = `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>`;
-        else if (pct >= 10) status = `<span class='check-good'>✔ (${pct.toFixed(1)}% Traits available)</span>`;
-        else status = `${pct.toFixed(1)}%`;
+        let status = pct >= 30 ? `<span class='maxed'>MAXED (${pct.toFixed(1)}% Traits Maxed)</span>` 
+                     : pct >= 10 ? `<span class='check-good'>✔ (${pct.toFixed(1)}% Traits available)</span>` 
+                     : `${pct.toFixed(1)}%`;
 
         resultBox.innerHTML += `
             <p>
@@ -197,10 +184,8 @@ document.getElementById("calculate-btn").onclick = () => {
         `;
     }
 
-
     // Overall multiplier & traits
     let overallMultiplier = oreTypesUsed ? (totalMultiplier / oreTypesUsed) : 0;
     resultBox.innerHTML += `<p><b>Overall Multiplier:</b> ${overallMultiplier.toFixed(2)}x</p>`;
     resultBox.innerHTML += `<p><b>Overall Traits:</b><br>${overallTraits.length ? overallTraits.map(t => "- " + t).join("<br>") : "-"}</p>`;
 };
-//TeaOtaku Test
