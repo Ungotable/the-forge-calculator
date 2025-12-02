@@ -203,3 +203,4 @@ document.getElementById("calculate-btn").onclick = () => {
     resultBox.innerHTML += `<p><b>Overall Multiplier:</b> ${overallMultiplier.toFixed(2)}x</p>`;
     resultBox.innerHTML += `<p><b>Overall Traits:</b><br>${overallTraits.length ? overallTraits.map(t => "- " + t).join("<br>") : "-"}</p>`;
 };
+//TeaOtaku Test
