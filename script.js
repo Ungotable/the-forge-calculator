@@ -81,21 +81,34 @@ document.getElementById("calculate-btn").onclick = () => {
         }
     }
 
-    // Determine craftable weapon/armor type
-    let weaponType = "None";
-    if (totalAmount >= 15) weaponType = "Colossal Swords";
-    else if (totalAmount >= 10) weaponType = "Great Swords";
-    else if (totalAmount >= 5) weaponType = "Straight Swords";
-    else if (totalAmount >= 1) weaponType = "Daggers";
+// Determine craftable weapon/armor type from JSON
+function getCraftableItem(totalAmount, jsonData) {
+    // Find the closest key ≤ totalAmount
+    const keys = Object.keys(jsonData).map(k => parseInt(k)).sort((a, b) => a - b);
+    let selectedKey = null;
+    for (let k of keys) {
+        if (totalAmount >= k) selectedKey = k;
+    }
+    if (selectedKey !== null) {
+        return {
+            item: jsonData[selectedKey].item,
+            chance: jsonData[selectedKey].chance
+        };
+    } else {
+        return { item: "None", chance: 0 };
+    }
+}
 
-    let armorTypeName = "None";
-    if (totalAmount >= 10) armorTypeName = "Heavy Armor";
-    else if (totalAmount >= 6) armorTypeName = "Medium Armor";
-    else if (totalAmount >= 3) armorTypeName = "Light Armor";
+    const weaponResult = getCraftableItem(totalAmount, weapontype.crafting_weapon_by_ore);
+    const armorResult = getCraftableItem(totalAmount, armortype.crafting_armor_by_ore);
 
     // Display only the type names
-    document.getElementById("weapon-result").textContent = weaponType;
-    document.getElementById("armor-result").textContent = armorTypeName;
+    document.getElementById("weapon-result").textContent = weaponResult.item;
+    document.getElementById("armor-result").textContent = armorResult.item;
+
+    // Optional: also show chance
+    document.getElementById("weapon-chance").textContent = weaponResult.chance + "%";
+    document.getElementById("armor-chance").textContent = armorResult.chance + "%";
 
     // Display detailed weapon variants on right side
     const weaponBox = document.getElementById("weapon-stats");
